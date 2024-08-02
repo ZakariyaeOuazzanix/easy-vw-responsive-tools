@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <style>
+    .mb-10{
+      margin-bottom: 40px;
+    }
+    .ml-5{
+      margin-left: 20px;
+      font-size: 18px;
+      
+      
+    }
+    .center{
+      min-height: 100vh;
+      display : flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+  </style>
+</head>
+<body style="font-size: 25px;">
+  <div class="center">
+    <div class="mb-10"  style="display: flex; align-items: center;">
+      px value : <input class="ml-5" id='px-value' type="number" placeholder="px value">
+    </div>
+
+      <div style="display: flex; align-items: center;">
+      <div>vw value : <label style="background-color: lightblue;" class="ml-5" id='vw-value'></label></div>
+        <div><button style="padding: 6px 10px; cursor: pointer;" class="ml-5" onClick="copyToClipboard(1)">Copy</button></div>
+      </div>
+
+
+      <div class="mb-10"  style="display: flex; align-items: center; margin-top: 50px;">
+        string with new lines : <textarea class="ml-5" id='string-with-new-lines' placeholder="Enter original string"></textarea>
+        <button style="padding: 6px 10px; cursor: pointer;" class="ml-5" onClick="copyToClipboard(2)">Copy String without new lines</button>
+      </div>
+
+      <div class="mb-10"  style="display: flex; align-items: center; margin-top: 50px;">
+        original page to stop shrinking : <textarea class="ml-5" id='original-page-string' placeholder="Enter original page (string)"></textarea>
+        <input type="number" placeholder="shrinking limit in px" id="shrink-limit" class="ml-5">
+        <button style="padding: 6px 10px; cursor: pointer;" class="ml-5" onClick="copyToClipboard(3)">Copy limited shrinking page</button>
+      </div>
+  
+  
+  </div>
+
+
+    
+
+  <script>
+
+      let pxInput = document.getElementById('px-value');
+      pxInput.addEventListener("keyup",()=>{
+        let pxValue = pxInput.value;
+        let vwValue = document.getElementById('vw-value');
+        vwValue.textContent = ((pxValue/1440)*100).toFixed(2);
+      })
+
+      async function copyToClipboard(thingToCopy) {
+        if(thingToCopy ==1){
+            try {
+            let vwContent = document.getElementById('vw-value').textContent;
+            vwContent=`-[${vwContent}vw]`;
+            await navigator.clipboard.writeText(vwContent);
+            console.log('Text copied to clipboard');
+          } catch (err) {
+            console.error('Failed to copy: ', err);
+          }
+        }
+        else if(thingToCopy ==2){
+          let stringWithNewLines = document.getElementById('string-with-new-lines').value;
+          //let stringWithoutNewLines = stringWithNewLines.replace(/\r|\n/g, ' ');
+          let stringWithoutNewLines = stringWithNewLines.replace(/#987306/g, '#2d3c59');
+          try {
+            await navigator.clipboard.writeText(stringWithoutNewLines);
+            console.log('Text copied to clipboard');
+          } catch (err) {
+            console.error('Failed to copy: ', err);
+          }
+        }
+
+        else if(thingToCopy ==3){
+          
+          let stopShrinkingWidth = document.getElementById('shrink-limit').value;
+          let fullString = document.getElementById('original-page-string').value;
+          fullString = fullString.replace(/sub-\d+:.*?\]/g, '');
+          let vwStrings = fullString.match(/-?\w+-\[\d+(\.\d+)?vw\]/g);
+          let vwStringsSet = new Set(vwStrings);
+          for (let vwString of vwStringsSet){
+              convertedNum = (((Number(vwString.match(/\d+(\.\d+)?/)[0]))/100)*stopShrinkingWidth).toFixed(1);
+              //console.log(convertedNum);
+              let newString = 'sub-'+stopShrinkingWidth.toString()+':'+vwString.replace(/\d+(\.\d+)?vw/, convertedNum.toString() +'px') ;
+              let vwStringEsc = escapeRegExp(vwString);//adding \ to escape chars like [
+              const regexp = new RegExp(vwStringEsc,'g');
+              fullString = fullString.replace(regexp,vwString + ' ' + newString);
+              //fullString = fullString.replace(vwStringsSet[i],vwStringsSet[i] + ' ' + newString);
+          }
+          try {
+            await navigator.clipboard.writeText(fullString);
+            //alert('done');
+            console.log('Text copied to clipboard');
+          } catch (err) {
+            console.error('Failed to copy: ', err);
+          }
+          
+      }
+
+}
+ 
+function escapeRegExp(string) {
+  return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // $& means the whole matched string
+}
+  </script>
+</body>
+</html>
